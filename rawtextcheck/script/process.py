@@ -12,6 +12,7 @@ tool to perform the analysis and returns structured results.
 
 # == Imports ==================================================================
 
+import re
 from logging import Logger
 import os
 from types import ModuleType
@@ -102,10 +103,21 @@ def remove_ignored_codes(text: str, ignored_codes: list[str], insert_space: bool
         str: The text with the ignored substrings removed.
     """
     for code in ignored_codes:
-        if insert_space:
-            text = text.replace(code, " ")
+        # Handle the number tag <[*]> which matches any number followed by the suffix
+        if "<[*]>" in code:
+            # Extract the suffix after <[*]>
+            suffix = code.split("<[*]>", 1)[1]
+            # Create regex pattern: any digit sequence followed by the suffix
+            pattern = r'\d+' + re.escape(suffix)
+            if insert_space:
+                text = re.sub(pattern, " ", text)
+            else:
+                text = re.sub(pattern, "", text)
         else:
-            text = text.replace(code, "")
+            if insert_space:
+                text = text.replace(code, " ")
+            else:
+                text = text.replace(code, "")
     return text
 
 
